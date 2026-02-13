@@ -7,43 +7,55 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function SmartApp() {
-  const sectionRef = useRef(null);
-  const contentRef = useRef(null);
+  // 1. Define types for the refs so TypeScript knows they aren't 'never'
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    gsap.from(contentRef.current?.querySelectorAll(".app-feature"), {
-      opacity: 0,
-      x: -50,
-      duration: 0.6,
-      stagger: 0.15,
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start: "top 70%",
-      },
-    });
+    // 2. Use gsap.context() for better cleanup and scoping
+    let ctx = gsap.context(() => {
+      
+      // We can now safely select '.app-feature' because it's scoped to contentRef
+      gsap.from(".app-feature", {
+        opacity: 0,
+        x: -50,
+        duration: 0.6,
+        stagger: 0.15,
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 70%",
+          // scrub: true, // Uncomment if you want it to follow scroll progress
+        },
+      });
+
+    }, contentRef); // <--- This scopes all GSAP selectors to this specific element
+
+    return () => ctx.revert(); // 3. Cleanup on unmount
   }, []);
+
+  const features = [
+    { label: "Dimming Sliders", desc: "Intuitive light adjustment" },
+    { label: "Scene Automation", desc: "Preset routines and schedules" },
+    { label: "Motion Sensors", desc: "Intelligent automation" },
+    { label: "Real-time Feedback", desc: "Live device status" },
+  ];
 
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-screen bg-black flex items-center justify-center px-6 py-20"
+      className="relative min-h-screen bg-black flex items-center justify-center px-6 py-20 text-white"
     >
-      <div ref={contentRef} className="max-w-4xl mx-auto">
-        <h2 className="text-6xl font-light text-center mb-8 text-white tracking-wider">
+      <div ref={contentRef} className="max-w-4xl mx-auto w-full">
+        <h2 className="text-6xl font-light text-center mb-8 tracking-wider">
           Smart App Interface
         </h2>
         <p className="text-center text-white/70 mb-16 font-light">
           Mobile-first control for your entire ecosystem
         </p>
 
-        {/* Features */}
+        {/* Features Container */}
         <div className="space-y-6">
-          {[
-            { label: "Dimming Sliders", desc: "Intuitive light adjustment" },
-            { label: "Scene Automation", desc: "Preset routines and schedules" },
-            { label: "Motion Sensors", desc: "Intelligent automation" },
-            { label: "Real-time Feedback", desc: "Live device status" },
-          ].map((feature, i) => (
+          {features.map((feature, i) => (
             <div
               key={i}
               className="app-feature bg-white/5 border border-white/10 rounded-lg p-6 hover:border-blue-500/50 transition flex items-center justify-between"

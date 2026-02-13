@@ -7,35 +7,45 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Intelligence() {
-  const sectionRef = useRef(null);
-  const titleRef = useRef(null);
-  const linesRef = useRef([]);
+  const sectionRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  // Strictly typing the SVG array to prevent 'never' or 'any' errors
+  const linesRef = useRef<SVGPathElement[]>([]);
 
   useEffect(() => {
-    // Animate title
-    gsap.from(titleRef.current, {
-      opacity: 0,
-      y: 30,
-      duration: 0.8,
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start: "top 70%",
-      },
-    });
+    const ctx = gsap.context(() => {
+      // 1. Animate title entrance
+      if (titleRef.current) {
+        gsap.from(titleRef.current, {
+          opacity: 0,
+          y: 30,
+          duration: 0.8,
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top 70%",
+          },
+        });
+      }
 
-    // Animate SVG lines
-    linesRef.current.forEach((line, i) => {
-      gsap.from(line, {
-        strokeDashoffset: 1000,
-        opacity: 0,
-        duration: 1.5,
-        delay: i * 0.3,
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 60%",
-        },
+      // 2. Animate SVG path drawing (stroke-dasharray logic)
+      linesRef.current.forEach((line, i) => {
+        if (line) {
+          gsap.from(line, {
+            strokeDashoffset: 1000,
+            opacity: 0,
+            duration: 1.5,
+            delay: i * 0.3,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 60%",
+            },
+          });
+        }
       });
-    });
+    }, sectionRef);
+
+    return () => ctx.revert(); // Proper cleanup for GSAP context
   }, []);
 
   return (
@@ -51,15 +61,17 @@ export default function Intelligence() {
           Intelligence at Every Level
         </h2>
 
-        {/* SVG Path Animation */}
+        {/* Image of an interactive IoT network diagram representing smart home automation nodes */}
         <svg
           viewBox="0 0 1000 600"
           className="w-full mb-16"
           style={{ height: "400px" }}
         >
-          {/* Connecting lines */}
+          {/* Connecting lines - Ref logic fixed for TypeScript build */}
           <path
-            ref={(el) => el && linesRef.current.push(el)}
+            ref={(el) => {
+              if (el && !linesRef.current.includes(el)) linesRef.current.push(el);
+            }}
             d="M 100 300 Q 250 200, 400 300"
             stroke="url(#gradient)"
             strokeWidth="3"
@@ -67,7 +79,9 @@ export default function Intelligence() {
             strokeDasharray="1000"
           />
           <path
-            ref={(el) => el && linesRef.current.push(el)}
+            ref={(el) => {
+              if (el && !linesRef.current.includes(el)) linesRef.current.push(el);
+            }}
             d="M 400 300 Q 550 100, 700 300"
             stroke="url(#gradient)"
             strokeWidth="3"
@@ -75,7 +89,9 @@ export default function Intelligence() {
             strokeDasharray="1000"
           />
           <path
-            ref={(el) => el && linesRef.current.push(el)}
+            ref={(el) => {
+              if (el && !linesRef.current.includes(el)) linesRef.current.push(el);
+            }}
             d="M 700 300 Q 850 400, 900 300"
             stroke="url(#gradient)"
             strokeWidth="3"
@@ -83,7 +99,6 @@ export default function Intelligence() {
             strokeDasharray="1000"
           />
 
-          {/* Gradient */}
           <defs>
             <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#3b82f6" />
@@ -103,7 +118,7 @@ export default function Intelligence() {
                 cx={node.cx}
                 cy={node.cy}
                 r="30"
-                fill="white/10"
+                fill="rgba(255,255,255,0.05)"
                 stroke="#3b82f6"
                 strokeWidth="2"
               />
@@ -121,7 +136,6 @@ export default function Intelligence() {
           ))}
         </svg>
 
-        {/* Features Grid */}
         <div className="grid md:grid-cols-2 gap-8 mt-16">
           {[
             "AI-Powered Learning",
@@ -131,9 +145,9 @@ export default function Intelligence() {
           ].map((feature, i) => (
             <div
               key={i}
-              className="bg-white/5 border border-white/10 rounded-lg p-8 hover:border-blue-500/50 transition"
+              className="bg-white/5 border border-white/10 rounded-lg p-8 hover:border-blue-500/50 transition duration-300"
             >
-              <h3 className="font-semibold text-lg mb-2">{feature}</h3>
+              <h3 className="font-semibold text-lg mb-2 text-white">{feature}</h3>
               <p className="text-white/60">Advanced IoT Intelligence</p>
             </div>
           ))}
